@@ -1,6 +1,5 @@
 # AI Engineering Portfolio
 
-Five progressively complex AI agent projects to show as a beginner.
 ## Projects
 
 ### 1. [RAG Q&A Agent](./project-01-rag-qa-agent/)
