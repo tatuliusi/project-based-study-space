@@ -1,8 +1,10 @@
 from typing import TypedDict
 
+from langchain_community.callbacks import get_openai_callback
 from langchain_community.vectorstores import FAISS
 from langgraph.graph import END, START, StateGraph
 
+from src.logger import QueryTrace
 from src.nodes import (
     generate_node,
     grade_relevance_node,
@@ -17,6 +19,7 @@ class RAGState(TypedDict):
     documents: list
     generation: str
     rewrite_count: int
+    trace: QueryTrace
 
 
 def build_graph(store: FAISS) -> StateGraph:
@@ -40,7 +43,20 @@ def build_graph(store: FAISS) -> StateGraph:
     return graph.compile()
 
 
-def ask(query: str, store: FAISS) -> str:
+def ask(query: str, store: FAISS) -> tuple[str, QueryTrace]:
+    trace = QueryTrace(query=query)
     app = build_graph(store)
-    result = app.invoke({"query": query, "documents": [], "generation": "", "rewrite_count": 0})
-    return result["generation"]
+
+    with get_openai_callback() as cb:
+        result = app.invoke({
+            "query": query,
+            "documents": [],
+            "generation": "",
+            "rewrite_count": 0,
+            "trace": trace,
+        })
+
+    trace.total_tokens = cb.total_tokens
+    trace.total_cost_usd = cb.total_cost
+
+    return result["generation"], trace
