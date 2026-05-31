@@ -1,0 +1,63 @@
+import os
+import tempfile
+
+import streamlit as st
+from dotenv import load_dotenv
+
+load_dotenv()
+
+from src.graph import ask
+from src.retriever import build_vectorstore, load_vectorstore
+
+st.set_page_config(page_title="RAG Q&A Agent", page_icon="📄")
+st.title("RAG Q&A Agent")
+st.caption("Upload documents, ask questions, get cited answers.")
+
+if "store" not in st.session_state:
+    st.session_state.store = load_vectorstore()
+
+if "messages" not in st.session_state:
+    st.session_state.messages = []
+
+with st.sidebar:
+    st.header("Documents")
+    uploaded = st.file_uploader("Upload PDF or TXT files", type=["pdf", "txt"], accept_multiple_files=True)
+
+    if uploaded and st.button("Index documents"):
+        with st.spinner("Indexing..."):
+            tmp_paths = []
+            for f in uploaded:
+                suffix = ".pdf" if f.name.endswith(".pdf") else ".txt"
+                with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
+                    tmp.write(f.read())
+                    tmp_paths.append(tmp.name)
+
+            st.session_state.store = build_vectorstore(tmp_paths)
+            for p in tmp_paths:
+                os.unlink(p)
+
+        st.success(f"Indexed {len(uploaded)} file(s).")
+
+    if st.session_state.store:
+        st.success("Vector store ready.")
+    else:
+        st.warning("No documents indexed yet.")
+
+for msg in st.session_state.messages:
+    with st.chat_message(msg["role"]):
+        st.write(msg["content"])
+
+if query := st.chat_input("Ask a question about your documents..."):
+    if not st.session_state.store:
+        st.error("Upload and index documents first.")
+    else:
+        st.session_state.messages.append({"role": "user", "content": query})
+        with st.chat_message("user"):
+            st.write(query)
+
+        with st.chat_message("assistant"):
+            with st.spinner("Thinking..."):
+                answer = ask(query, st.session_state.store)
+            st.write(answer)
+
+        st.session_state.messages.append({"role": "assistant", "content": answer})
