@@ -15,9 +15,12 @@ st.caption("Upload documents, ask questions, get cited answers.")
 
 if "store" not in st.session_state:
     st.session_state.store = load_vectorstore()
-
 if "messages" not in st.session_state:
     st.session_state.messages = []
+if "session_cost" not in st.session_state:
+    st.session_state.session_cost = 0.0
+if "session_tokens" not in st.session_state:
+    st.session_state.session_tokens = 0
 
 with st.sidebar:
     st.header("Documents")
@@ -43,9 +46,19 @@ with st.sidebar:
     else:
         st.warning("No documents indexed yet.")
 
+    st.divider()
+    st.header("Session costs")
+    st.metric("Total tokens", f"{st.session_state.session_tokens:,}")
+    st.metric("Total cost", f"${st.session_state.session_cost:.5f}")
+
 for msg in st.session_state.messages:
     with st.chat_message(msg["role"]):
         st.write(msg["content"])
+        if msg["role"] == "assistant" and "trace" in msg:
+            trace = msg["trace"]
+            with st.expander(f"Trace — {trace.total_tokens} tokens / ${trace.total_cost_usd:.5f}"):
+                for event in trace.events:
+                    st.markdown(f"**{event.step}** — {event.detail}")
 
 if query := st.chat_input("Ask a question about your documents..."):
     if not st.session_state.store:
@@ -57,7 +70,13 @@ if query := st.chat_input("Ask a question about your documents..."):
 
         with st.chat_message("assistant"):
             with st.spinner("Thinking..."):
-                answer = ask(query, st.session_state.store)
+                answer, trace = ask(query, st.session_state.store)
             st.write(answer)
+            with st.expander(f"Trace — {trace.total_tokens} tokens / ${trace.total_cost_usd:.5f}"):
+                for event in trace.events:
+                    st.markdown(f"**{event.step}** — {event.detail}")
 
-        st.session_state.messages.append({"role": "assistant", "content": answer})
+        st.session_state.session_cost += trace.total_cost_usd
+        st.session_state.session_tokens += trace.total_tokens
+        st.session_state.messages.append({"role": "assistant", "content": answer, "trace": trace})
+        st.rerun()
