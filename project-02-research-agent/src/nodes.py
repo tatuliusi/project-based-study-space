@@ -4,8 +4,9 @@ from langchain_openai import ChatOpenAI
 from src.schemas import CoverageVerdict, ResearchReport
 
 _llm = ChatOpenAI(model="gpt-4o-mini", temperature=0)
+_report_llm = ChatOpenAI(model="gpt-4o", temperature=0)
 _coverage_checker = _llm.with_structured_output(CoverageVerdict)
-_report_writer = _llm.with_structured_output(ResearchReport)
+_report_writer = _report_llm.with_structured_output(ResearchReport)
 _tavily = TavilySearch(max_results=5)
 
 PLAN_PROMPT = """You are a research strategist. Generate 3–5 targeted web search queries to research the following topic.
@@ -28,19 +29,21 @@ Assess:
 - gaps: list specific missing angles (empty if sufficient)
 - confidence: 0.0–1.0 score for how well the topic is covered"""
 
-REPORT_PROMPT = """You are a research analyst. Write a comprehensive research report from the following sources.
+REPORT_PROMPT = """You are a research analyst writing a factual report grounded entirely in the sources below.
+
+Rules:
+- Every claim in key_findings must come directly from a source below — cite it.
+- Do NOT write generic background knowledge or introductory filler.
+- Do NOT write "this report explains..." or "we aim to..." — write findings, not meta-commentary.
+- Each finding must state a specific fact, figure, mechanism, or insight extracted from the sources.
+- If two sources say different things, note the discrepancy as a finding.
+- summary: what the sources collectively reveal about the topic (2–3 sentences, specific)
+- conclusion: what someone should take away after reading this (2–3 sentences, actionable or insightful)
 
 Topic: {query}
 
 Sources:
-{results_text}
-
-Produce:
-- title: concise report title
-- summary: 2–3 sentence overview
-- key_findings: list of distinct points, each with supporting sources
-- sources: all sources used
-- conclusion: 2–3 sentence takeaway"""
+{results_text}"""
 
 
 def plan_node(state: dict) -> dict:
@@ -117,8 +120,13 @@ def route_after_evaluate(state: dict) -> str:
 
 
 def _format_results(results: list[dict]) -> str:
+    seen: set[str] = set()
     lines = []
     for r in results:
-        lines.append(f"[{r.get('title', 'No title')}] {r.get('url', '')}")
-        lines.append(f"  {r.get('content', '')[:400]}")
+        url = r.get("url", "")
+        if url in seen:
+            continue
+        seen.add(url)
+        lines.append(f"[{r.get('title', 'No title')}] {url}")
+        lines.append(f"  {r.get('content', '')[:1000]}")
     return "\n".join(lines)
