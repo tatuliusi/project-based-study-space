@@ -1,22 +1,22 @@
-# Project 2 — Multi-source Research Agent
+# Project 02 — Multi-source Research Agent
 
-Given a topic, the agent autonomously searches the web and academic sources, synthesizes findings, and produces a structured report with citations.
+A LangGraph agent that researches any question by planning web searches, evaluating coverage, looping to fill gaps, and producing a Pydantic-structured report.
 
 ## What this demonstrates
 
 - LangGraph tool nodes with real external APIs
-- Agentic loops — the agent decides when it has enough information to stop searching
+- Self-evaluation loop — the agent decides when it has enough information
+- Conditional routing based on coverage verdict
 - Structured LLM output with Pydantic v2
-- Parallel tool invocation (web search + arxiv simultaneously)
-- Conditional routing based on information sufficiency
+- Iterative search with gap-filling across up to 3 iterations
 
 ## Stack
 
-- **LangGraph** — orchestration
-- **Tavily API** — web search
-- **arxiv API** — academic paper retrieval
-- **OpenAI** — reasoning and report generation (`gpt-4o`)
-- **Pydantic v2** — structured report schema
+- **LangGraph** — graph orchestration with conditional loop
+- **Tavily API** — real-time web search
+- **OpenAI GPT-4o-mini** — planning, evaluation, and report generation
+- **Pydantic v2** — structured output schemas
+- **Streamlit** — UI with live trace sidebar
 
 ## Setup
 
@@ -29,18 +29,20 @@ cp .env.example .env
 # Add OPENAI_API_KEY and TAVILY_API_KEY to .env
 ```
 
+Get a free Tavily API key at https://tavily.com.
+
 ## Run
 
 ```bash
-python src/main.py --topic "LangGraph multi-agent systems"
+streamlit run src/app.py
 ```
 
-## Graph overview
+## Graph
 
 ```
-START → plan_searches → [web_search, arxiv_search] → evaluate_coverage
-      → [sufficient] → generate_report → END
-      → [insufficient] → plan_searches (loop)
+START → plan → search → evaluate
+  ↑ (gaps found, iter ≤ 3)    ↓ (sufficient OR iter > 3)
+  └──────────────────────── generate → END
 ```
 
 See `ARCHITECTURE.md` for the full design.

@@ -1,47 +1,60 @@
 # Architecture — Multi-source Research Agent
 
-## Core pattern: ReAct loop with structured output
+## Core pattern: plan → search → self-evaluate loop
 
-This agent uses a Reason → Act → Observe loop implemented as a LangGraph graph. The key difference from Project 1 is that the agent has **agency over its own search strategy** — it decides what to search, evaluates what it found, and decides whether to search more or stop.
+This agent has **agency over its own search strategy**. It decides what to search, evaluates what it found, and decides whether to search more or stop. Project 1 was a fixed retrieve-grade-generate pipeline. This project introduces a real agentic loop with conditional routing.
 
 ## State
 
 ```python
 class ResearchState(TypedDict):
-    topic: str
-    search_queries: list[str]        # Planned queries for this iteration
-    web_results: list[SearchResult]  # Accumulated from all iterations
-    paper_results: list[PaperResult] # Accumulated arxiv results
-    iteration: int                   # Loop guard
-    report: ResearchReport | None    # Final structured output
+    query: str
+    planned_queries: list[str]       # queries for this iteration
+    search_results: list[dict]       # accumulated across all iterations
+    iteration: int                   # loop guard (max 3)
+    coverage_verdict: CoverageVerdict
+    report: ResearchReport
+    trace: ResearchTrace
 ```
 
-## Nodes
-
-### `plan_searches`
-LLM node. Given the topic and any results gathered so far, produces a list of specific search queries. On iteration 1, plans from scratch. On subsequent iterations, plans to fill gaps it identified in `evaluate_coverage`.
-
-### `web_search`
-Tool node. Calls Tavily API with each planned query in parallel. Returns structured results (title, URL, snippet, date).
-
-### `arxiv_search`
-Tool node. Calls arxiv API, filters to last 2 years, extracts title, abstract, authors, link.
-
-### `evaluate_coverage`
-LLM node. Reviews all accumulated results against the original topic. Produces a structured verdict: `{sufficient: bool, gaps: list[str], confidence: float}`. If not sufficient and iteration < 3, routes back to `plan_searches`.
-
-### `generate_report`
-LLM node with structured output. Produces a `ResearchReport` Pydantic model:
+## Schemas (Pydantic v2)
 
 ```python
+class CoverageVerdict(BaseModel):
+    sufficient: bool
+    gaps: list[str]        # missing angles to search next iteration
+    confidence: float      # 0.0–1.0
+
+class Citation(BaseModel):
+    title: str
+    url: str
+    snippet: str
+
+class Finding(BaseModel):
+    point: str
+    sources: list[Citation]
+
 class ResearchReport(BaseModel):
     title: str
     summary: str
     key_findings: list[Finding]
-    academic_sources: list[Citation]
-    web_sources: list[Citation]
-    limitations: str
+    sources: list[Citation]
+    conclusion: str
 ```
+
+## Nodes
+
+### `plan`
+LLM node. Iteration 1: plans 3–5 queries from scratch. Subsequent iterations: targets the `gaps` list from the previous `CoverageVerdict` to fill missing angles.
+
+### `search`
+Tool node. Calls Tavily API for each planned query. Accumulates results across iterations — results are never discarded, they stack.
+
+### `evaluate`
+LLM node with structured output. Reviews all accumulated results against the original query. Returns `CoverageVerdict`. Increments `iteration` counter.
+
+### `generate`
+LLM node with structured output. Reads all accumulated results and produces a `ResearchReport`. Only reached once coverage is sufficient or the loop guard fires.
 
 ## Graph
 
@@ -49,29 +62,45 @@ class ResearchReport(BaseModel):
 START
   │
   ▼
-plan_searches
-  │
-  ▼
-web_search ──┐
-             ├── (parallel) ──► evaluate_coverage
-arxiv_search ┘
-  │
-  ├── [sufficient OR iteration >= 3] ──► generate_report ──► END
-  │
-  └── [not sufficient] ──────────────────────────────────────► plan_searches
+plan ──► search ──► evaluate
+  ▲                    │
+  │    [insufficient   │  [sufficient OR iteration > 3]
+  │     AND iter ≤ 3]  │
+  └────────────────────┤
+                       ▼
+                    generate ──► END
 ```
 
-## Why parallel tool execution
+## Routing logic
 
-Web search and arxiv search are independent. Running them in parallel halves the latency. LangGraph's `Send` API handles fan-out and join natively — this is one of the patterns that makes LangGraph better than plain chains for tool-using agents.
+```python
+def route_after_evaluate(state) -> str:
+    verdict = state["coverage_verdict"]
+    iteration = state["iteration"]
+    if not verdict or verdict.sufficient or iteration > 3:
+        return "generate"
+    return "plan"
+```
+
+The loop guard (`iteration > 3`) prevents infinite loops when the LLM never declares coverage sufficient.
+
+## Key differences from Project 1
+
+| Project 1 (RAG) | Project 2 (Research) |
+|-----------------|----------------------|
+| Fixed pipeline | Conditional loop |
+| Grading is binary per-chunk | Self-evaluation of full coverage |
+| Static document set | Dynamic: agent grows its own knowledge base |
+| One LLM call path | Multiple LLM calls with gap-filling |
+| Structured output: string | Structured output: nested Pydantic model |
 
 ## What makes this portfolio-worthy
 
-A naive implementation just does one search and generates. This agent:
-1. Plans its searches strategically
-2. Runs multiple source types in parallel
-3. Self-evaluates whether it has enough information
-4. Loops to fill gaps before generating
-5. Produces fully structured, cited output
+A naive implementation does one search and generates. This agent:
+1. Plans searches strategically
+2. Self-evaluates whether it has enough information
+3. Loops to fill specific identified gaps
+4. Accumulates knowledge across iterations
+5. Produces a fully structured, cited report via Pydantic
 
-That is a real agentic workflow, not a glorified API call.
+That is a real agentic workflow with genuine decision-making, not a glorified API call.
