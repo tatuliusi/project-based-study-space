@@ -6,7 +6,9 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from dotenv import load_dotenv
 
-load_dotenv(Path(__file__).parent.parent / ".env")
+_project_root = Path(__file__).parent.parent
+load_dotenv(_project_root.parent / ".env")  # workspace root (shared API keys)
+load_dotenv(_project_root / ".env")         # project-level overrides
 
 from src.graph import review_pr  # noqa: E402
 from src.schemas import CodeReview, Finding  # noqa: E402
