@@ -5,7 +5,7 @@ load_dotenv()
 
 from src.graph import research
 
-st.set_page_config(page_title="Research Agent", page_icon="🔬", layout="wide")
+st.set_page_config(page_title="Research Agent", layout="wide")
 
 st.markdown("""
 <style>
@@ -70,20 +70,8 @@ html, body, [data-testid="stApp"] { background: #f8fafc; }
 
 # ── sidebar ───────────────────────────────────────────────────────────────────
 with st.sidebar:
-    st.markdown("## 🔬 Research Agent")
+    st.markdown("## Research Agent")
     st.caption("v1.0 · LangGraph + Tavily")
-    st.divider()
-    st.markdown("""
-**How it works**
-
-```
-plan → search → evaluate
-  ↑ gaps          ↓ sufficient
-  └──────── generate
-```
-
-The agent loops up to **3 iterations**, filling identified gaps before writing the report.
-""")
     st.divider()
     st.markdown("**Live trace**")
     trace_box = st.empty()
@@ -91,7 +79,7 @@ The agent loops up to **3 iterations**, filling identified gaps before writing t
 # ── hero ──────────────────────────────────────────────────────────────────────
 st.markdown("""
 <div class="hero">
-  <h1>🔬 Research Agent</h1>
+  <h1>Research Agent</h1>
   <p>Ask any question. The agent searches the web, evaluates coverage, and writes a cited report.</p>
 </div>
 """, unsafe_allow_html=True)
@@ -110,19 +98,16 @@ with col_btn:
 if run and query.strip():
     trace_lines: list[str] = []
 
-    NODE_ICONS = {"plan": "🗂", "search": "🌐", "evaluate": "🔎", "generate": "✍️"}
-
     with st.status("Researching...", expanded=True) as status:
         def on_step(node: str, msg: str) -> None:
-            icon = NODE_ICONS.get(node, "•")
-            st.write(f"{icon} **{node}** — {msg}")
-            trace_lines.append(f"{icon} **{node}** — {msg}")
+            st.write(f"**{node}** — {msg}")
+            trace_lines.append(f"**{node}** — {msg}")
 
         report, trace = research(query.strip(), on_step=on_step)
         status.update(label="Done!", state="complete", expanded=False)
 
     # update sidebar trace
-    trace_box.markdown("\n\n".join(trace_lines) + f"\n\n---\n⏱ {trace.elapsed()}s · {trace.total_tokens:,} tokens · ${trace.total_cost_usd:.4f}")
+    trace_box.markdown("\n\n".join(trace_lines) + f"\n\n---\n{trace.elapsed()}s · {trace.total_tokens:,} tokens · ${trace.total_cost_usd:.4f}")
 
     # ── metrics row ───────────────────────────────────────────────────────────
     iterations = sum(1 for n, _ in trace.steps if n == "evaluate")
