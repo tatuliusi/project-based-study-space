@@ -40,8 +40,8 @@ def build_graph() -> Any:
     return graph.compile()
 
 
-def research(query: str) -> tuple[ResearchReport, ResearchTrace]:
-    trace = ResearchTrace(query=query)
+def research(query: str, on_step=None) -> tuple[ResearchReport, ResearchTrace]:
+    trace = ResearchTrace(query=query, on_step=on_step)
     app = build_graph()
 
     with get_openai_callback() as cb:
