@@ -1,4 +1,4 @@
-from langchain_community.tools.tavily_search import TavilySearchResults
+from langchain_tavily import TavilySearch
 from langchain_openai import ChatOpenAI
 
 from src.schemas import CoverageVerdict, ResearchReport
@@ -6,7 +6,7 @@ from src.schemas import CoverageVerdict, ResearchReport
 _llm = ChatOpenAI(model="gpt-4o-mini", temperature=0)
 _coverage_checker = _llm.with_structured_output(CoverageVerdict)
 _report_writer = _llm.with_structured_output(ResearchReport)
-_tavily = TavilySearchResults(max_results=5)
+_tavily = TavilySearch(max_results=5)
 
 PLAN_PROMPT = """You are a research strategist. Generate 3–5 targeted web search queries to research the following topic.
 
