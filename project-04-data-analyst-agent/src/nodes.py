@@ -18,6 +18,7 @@ from src.state import AnalysisState
 
 _MAX_FIX_ATTEMPTS = 2
 _CHARTS_DIR = "charts"
+_MAX_OUTPUT_CHARS = 2000
 
 _llm_mini = ChatOpenAI(model="gpt-4o-mini", temperature=0)
 _llm = ChatOpenAI(model="gpt-4o", temperature=0)
@@ -184,7 +185,7 @@ def interpret_results(state: AnalysisState) -> dict:
 
 def generate_report(state: AnalysisState) -> dict:
     all_output = "\n\n".join(
-        f"Step {i + 1} — {r.step}\nOutput:\n{r.stdout[:1200]}"
+        f"Step {i + 1} — {r.step}\nOutput:\n{r.stdout[:_MAX_OUTPUT_CHARS]}"
         for i, r in enumerate(state["code_history"])
     )
     charts_desc = "\n".join(
