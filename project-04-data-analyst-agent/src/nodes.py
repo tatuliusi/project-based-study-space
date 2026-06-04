@@ -103,6 +103,9 @@ def generate_code(state: AnalysisState) -> dict:
 
 def execute_code(state: AnalysisState) -> dict:
     pending = state["code_history"][-1]
+    step_idx = state["current_step_index"]
+    total = len(state["analysis_plan"])
+    print(f"  [{step_idx + 1}/{total}] {pending.step[:80]}")
     chart_dir = str(Path(state["file_path"]).parent / _CHARTS_DIR)
 
     stdout, stderr, success = run_code(pending.code, state["file_path"], chart_dir)
