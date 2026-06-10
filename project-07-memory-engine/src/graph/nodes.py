@@ -2,19 +2,18 @@ from __future__ import annotations
 
 import asyncio
 import os
-import re
 from uuid import uuid4
 
 from langchain_core.messages import AIMessage, SystemMessage
-from langchain_openai import ChatOpenAI, OpenAIEmbeddings
+from langchain_openai import ChatOpenAI
 
 from src.graph.ranking import rank_memories
 from src.graph.state import TurnState
 from src.models import Episode, ExtractedMemories, SemanticMemory
+from src.services.embedding_service import embed
 from src.services.postgres_service import PostgresService
 from src.services.qdrant_service import QdrantService
 
-_embedder = OpenAIEmbeddings(model="text-embedding-3-small")
 _llm = ChatOpenAI(model="gpt-4o-mini", temperature=0.3)
 _extractor = _llm.with_structured_output(ExtractedMemories)
 
@@ -36,7 +35,7 @@ async def retrieve_memories(state: TurnState) -> dict:
     text = last_message.content if hasattr(last_message, "content") else str(last_message)
 
     embedding, profile, episodes = await asyncio.gather(
-        _embedder.aembed_query(text),
+        embed(text),
         _postgres.load_profile(user_id),
         _postgres.get_recent_episodes(user_id, days=30),
     )
@@ -113,7 +112,7 @@ async def write_memories(state: TurnState) -> dict:
     tasks = []
 
     for fact in extracted.facts:
-        embedding = await _embedder.aembed_query(fact.content)
+        embedding = await embed(fact.content)
         mem = SemanticMemory(
             user_id=user_id,
             content=fact.content,

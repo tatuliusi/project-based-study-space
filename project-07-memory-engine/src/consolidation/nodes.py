@@ -4,16 +4,16 @@ import asyncio
 import os
 
 import numpy as np
-from langchain_openai import ChatOpenAI, OpenAIEmbeddings
+from langchain_openai import ChatOpenAI
 from sklearn.cluster import KMeans
 from sklearn.metrics import silhouette_score
 
 from src.consolidation.state import ConsolidationState
 from src.models import Episode, SemanticMemory
+from src.services.embedding_service import embed, embed_batch
 from src.services.postgres_service import PostgresService
 from src.services.qdrant_service import QdrantService
 
-_embedder = OpenAIEmbeddings(model="text-embedding-3-small")
 _llm = ChatOpenAI(model="gpt-4o-mini", temperature=0.0)
 
 _qdrant = QdrantService(
@@ -43,7 +43,7 @@ async def cluster_similar(state: ConsolidationState) -> dict:
         return {"clusters": []}
 
     texts = [f"{e.event_type} {e.subject}: {e.detail}" for e in episodes]
-    embeddings = await _embedder.aembed_documents(texts)
+    embeddings = await embed_batch(texts)
     X = np.array(embeddings)
 
     best_k, best_score = 2, -1.0
@@ -96,7 +96,7 @@ async def merge_clusters(state: ConsolidationState) -> dict:
         summary_msg = await _llm.ainvoke(prompt)
         summary_text = summary_msg.content.strip()
 
-        embedding = await _embedder.aembed_query(summary_text)
+        embedding = await embed(summary_text)
         mem = SemanticMemory(
             user_id=user_id,
             content=summary_text,
