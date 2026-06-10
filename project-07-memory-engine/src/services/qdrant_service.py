@@ -58,7 +58,8 @@ class QdrantService:
         embedding: list[float],
         user_id: str,
         top_k: int = 5,
-    ) -> list[SemanticMemory]:
+    ) -> list[tuple[SemanticMemory, float]]:
+        """Return (memory, cosine_similarity_score) pairs."""
         results = await self._client.search(
             collection_name=COLLECTION,
             query_vector=embedding,
@@ -68,21 +69,20 @@ class QdrantService:
             limit=top_k,
             with_payload=True,
         )
-        memories = []
+        hits = []
         for hit in results:
             p = hit.payload
-            memories.append(
-                SemanticMemory(
-                    id=str(hit.id),
-                    user_id=p["user_id"],
-                    content=p["content"],
-                    embedding=[],  # not returned to save bandwidth
-                    source_turn_id=p.get("source_turn_id", ""),
-                    importance=p.get("importance", 0.5),
-                    access_count=p.get("access_count", 0),
-                )
+            mem = SemanticMemory(
+                id=str(hit.id),
+                user_id=p["user_id"],
+                content=p["content"],
+                embedding=[],
+                source_turn_id=p.get("source_turn_id", ""),
+                importance=p.get("importance", 0.5),
+                access_count=p.get("access_count", 0),
             )
-        return memories
+            hits.append((mem, float(hit.score)))
+        return hits
 
     async def delete(self, memory_id: str) -> None:
         await self._client.delete(

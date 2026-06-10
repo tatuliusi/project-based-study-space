@@ -41,10 +41,7 @@ async def retrieve_memories(state: TurnState) -> dict:
         _postgres.get_recent_episodes(user_id, days=30),
     )
 
-    semantic_results = await _qdrant.search(embedding, user_id, top_k=8)
-    # pair each with a dummy score of 1.0 — qdrant doesn't expose score here,
-    # so we use importance as a proxy until the scored search is wired
-    semantic_hits = [(m, m.importance) for m in semantic_results]
+    semantic_hits = await _qdrant.search(embedding, user_id, top_k=8)
 
     ranked = rank_memories(semantic_hits, episodes, profile)
 
