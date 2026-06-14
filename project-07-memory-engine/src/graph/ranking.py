@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import math
 import os
-from datetime import datetime
+from datetime import datetime, timezone
 
 from src.models import Episode, PreferenceProfile, RankedMemory, SemanticMemory
 
@@ -14,7 +14,7 @@ TOP_K = int(os.getenv("TOP_K_MEMORIES", "5"))
 
 
 def _recency_decay(dt: datetime) -> float:
-    age_days = (datetime.utcnow() - dt).total_seconds() / 86400
+    age_days = (datetime.now(timezone.utc) - dt).total_seconds() / 86400
     return math.exp(-math.log(2) * age_days / HALF_LIFE_DAYS)
 
 

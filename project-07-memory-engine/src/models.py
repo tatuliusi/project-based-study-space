@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Literal
 from uuid import uuid4
 
@@ -19,7 +19,7 @@ class SemanticMemory(BaseModel):
     content: str
     embedding: list[float] = Field(default_factory=list)
     source_turn_id: str = ""
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     importance: float = 0.5
     access_count: int = 0
 
@@ -33,7 +33,7 @@ class Episode(BaseModel):
     subject: str
     detail: str
     sentiment: float = 0.0   # -1.0 to 1.0
-    occurred_at: datetime = Field(default_factory=datetime.utcnow)
+    occurred_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 
 # ── Tier 3: Preference profile (Postgres) ───────────────────────────────────
@@ -44,7 +44,7 @@ class PreferenceProfile(BaseModel):
     topics_of_interest: list[str] = Field(default_factory=list)
     topics_to_avoid: list[str] = Field(default_factory=list)
     known_context: dict[str, str] = Field(default_factory=dict)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 
 # ── LLM extraction schema ────────────────────────────────────────────────────

@@ -1,7 +1,7 @@
 """Unit tests for memory ranking logic — no LLM or DB required."""
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 import pytest
 
@@ -14,7 +14,7 @@ def _mem(content: str, importance: float = 0.5, age_days: int = 0) -> SemanticMe
         user_id="u1",
         content=content,
         importance=importance,
-        created_at=datetime.utcnow() - timedelta(days=age_days),
+        created_at=datetime.now(timezone.utc) - timedelta(days=age_days),
     )
 
 
@@ -24,7 +24,7 @@ def _episode(subject: str, age_days: int = 1) -> Episode:
         event_type="mentioned",
         subject=subject,
         detail=f"User mentioned {subject}",
-        occurred_at=datetime.utcnow() - timedelta(days=age_days),
+        occurred_at=datetime.now(timezone.utc) - timedelta(days=age_days),
     )
 
 
