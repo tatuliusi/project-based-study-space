@@ -1,33 +1,27 @@
 from __future__ import annotations
 
-import os
 from contextlib import asynccontextmanager
 from uuid import uuid4
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI
 from langchain_core.messages import HumanMessage
 
 from src.api.schemas import (
     ChatRequest,
     ChatResponse,
-    DeleteMemoryRequest,
     MemoryListResponse,
 )
+from src.config import settings
 from src.graph.pipeline import turn_graph
 from src.scheduler.jobs import create_scheduler
 from src.services.postgres_service import PostgresService
 from src.services.qdrant_service import QdrantService
 
 _qdrant = QdrantService(
-    host=os.getenv("QDRANT_HOST", "localhost"),
-    port=int(os.getenv("QDRANT_PORT", "6333")),
+    host=settings.qdrant_host,
+    port=settings.qdrant_port,
 )
-_postgres = PostgresService(
-    dsn=os.getenv(
-        "POSTGRES_DSN",
-        "postgresql+asyncpg://memory:memory@localhost:5432/memoryengine",
-    )
-)
+_postgres = PostgresService(dsn=settings.postgres_dsn)
 _scheduler = create_scheduler()
 
 
