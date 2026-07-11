@@ -2,24 +2,17 @@ from __future__ import annotations
 
 import asyncio
 import logging
-import os
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
 
+from src.config import settings
 from src.consolidation.graph import consolidation_graph
 from src.services.postgres_service import PostgresService
 
 logger = logging.getLogger(__name__)
 
-_CRON = os.getenv("CONSOLIDATION_CRON", "0 2 * * *")
-
-_postgres = PostgresService(
-    dsn=os.getenv(
-        "POSTGRES_DSN",
-        "postgresql+asyncpg://memory:memory@localhost:5432/memoryengine",
-    )
-)
+_postgres = PostgresService(dsn=settings.postgres_dsn)
 
 
 async def _run_consolidation_for_all_users() -> None:
@@ -28,12 +21,7 @@ async def _run_consolidation_for_all_users() -> None:
     from sqlalchemy.ext.asyncio import create_async_engine
     from src.services.postgres_service import EpisodeRow
 
-    engine = create_async_engine(
-        os.getenv(
-            "POSTGRES_DSN",
-            "postgresql+asyncpg://memory:memory@localhost:5432/memoryengine",
-        )
-    )
+    engine = create_async_engine(settings.postgres_dsn)
     async with engine.connect() as conn:
         result = await conn.execute(sa.select(EpisodeRow.user_id).distinct())
         user_ids = [row[0] for row in result.fetchall()]
@@ -53,7 +41,7 @@ def _consolidation_job() -> None:
 
 def create_scheduler() -> AsyncIOScheduler:
     scheduler = AsyncIOScheduler()
-    cron_parts = _CRON.split()
+    cron_parts = settings.consolidation_cron.split()
     trigger = CronTrigger(
         minute=cron_parts[0],
         hour=cron_parts[1],
