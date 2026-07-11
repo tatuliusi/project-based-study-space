@@ -37,6 +37,11 @@ async def lifespan(app: FastAPI):
 app = FastAPI(title="Memory Engine", version="0.1.0", lifespan=lifespan)
 
 
+@app.get("/health")
+async def health() -> dict:
+    return {"status": "ok"}
+
+
 @app.post("/chat", response_model=ChatResponse)
 async def chat(req: ChatRequest) -> ChatResponse:
     turn_id = str(uuid4())
