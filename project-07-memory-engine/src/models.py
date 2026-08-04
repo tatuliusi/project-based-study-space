@@ -22,6 +22,7 @@ class SemanticMemory(BaseModel):
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     importance: float = 0.5
     access_count: int = 0
+    last_accessed_at: datetime | None = None
 
 
 # ── Tier 2: Episodic memory (Postgres) ──────────────────────────────────────
