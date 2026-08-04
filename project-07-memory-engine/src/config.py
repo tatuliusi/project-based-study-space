@@ -7,6 +7,7 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
     openai_api_key: str = ""
+    embedding_model: str = "text-embedding-3-small"
 
     qdrant_host: str = "localhost"
     qdrant_port: int = 6333
