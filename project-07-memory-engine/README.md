@@ -1,107 +1,111 @@
-# Project 7 — Semantic Memory & Personalization Engine
+# Project 07 — Memory Engine
 
-A personal AI assistant that builds and queries a three-tier memory system — semantic (vector), episodic (structured events), and preference (explicit user model) — and uses those memories to personalize every response.
+This service demonstrates a simple, practical memory system for personalizing AI responses.
 
-## What this demonstrates
+In plain language: the app keeps three types of user memory — short text embeddings, a timeline of events, and a small preference profile — and it uses those memories to make replies more helpful and consistent.
 
-- Three-tier memory architecture: semantic (Qdrant), episodic (Postgres), preference (structured profile)
-- Memory consolidation: background LangGraph that clusters, merges, and prunes old episodic memories
-- Retrieval-augmented generation with user-specific context (not just documents)
-- Per-turn LangGraph lifecycle: retrieve → build context → respond → extract → write
-- Explicit user modeling: preference extraction via structured LLM output (Pydantic)
-- Cosine dedup guard: prevents inserting near-duplicate semantic memories (threshold 0.95)
-- Right-to-be-forgotten endpoint: hard-deletes all user data from Qdrant and Postgres
+## Key features
 
-## Stack
+- Three memory types: semantic (vector search in Qdrant), episodic (events in Postgres), and preferences (structured profile).
+- Per-turn flow: retrieve relevant memories, build a small context, call the LLM to respond, then extract and store new memories.
+- Nightly consolidation: older episodic events are clustered and summarized into compact semantic memories.
+- Duplicate protection: semantic inserts use an embedding-similarity guard to avoid near-duplicates.
+- Privacy controls: endpoints to delete a memory or delete all user data.
 
-- **LangGraph** — per-turn graph + nightly background consolidation graph
-- **Qdrant** — semantic memory (dense vector search, `text-embedding-3-small`, 1536 dims)
-- **Postgres** — episodic memory (timestamped event log) + preference profiles
-- **FastAPI** — REST API with lifespan startup (schema init + scheduler start)
-- **APScheduler** — nightly consolidation cron (configurable via `CONSOLIDATION_CRON`)
-- **OpenAI** — `gpt-4o-mini` for chat + extraction, `text-embedding-3-small` for embeddings
-- **Pydantic v2** — memory schemas, extraction schema, preference profile
+## Tech stack
 
-## Setup
+- `LangGraph` — orchestrates per-turn and consolidation graphs
+- `Qdrant` — semantic memory (embeddings + nearest-neighbor search)
+- `Postgres` — episodic timeline and preference records
+- `FastAPI` — REST API surface
+- `APScheduler` — schedules consolidation jobs
+- `OpenAI` — embeddings and chat/extraction models
+- `Pydantic v2` — typed schemas for extraction and profiles
+
+## Quickstart (local)
+
+1. Open the project folder and create a venv:
 
 ```bash
 cd project-07-memory-engine
-python -m venv .venv && source .venv/bin/activate
+python -m venv .venv
+source .venv/bin/activate
 pip install -r requirements.txt
-
-cp .env.example .env
-# Fill in OPENAI_API_KEY; adjust POSTGRES_DSN and QDRANT_HOST if needed
-
-docker compose up -d          # starts Qdrant + Postgres
-
-uvicorn src.api.main:app --reload
-# Schema is auto-created on first startup via SQLAlchemy
 ```
 
-## API endpoints
+2. Copy environment template and set keys:
 
-| Method | Path | Description |
-|--------|------|-------------|
-| POST | `/chat` | Send a message; returns personalized reply + memories used |
-| GET | `/users/{id}/memories` | List all semantic memories and preference profile |
-| DELETE | `/users/{id}/memories/{mem_id}` | Forget a specific semantic memory |
-| DELETE | `/users/{id}` | Right-to-be-forgotten: delete all user data |
-| POST | `/consolidate/{id}` | Trigger manual nightly consolidation for a user |
+```bash
+cp .env.example .env
+# Set OPENAI_API_KEY, POSTGRES_DSN, QDRANT_HOST (see .env.example)
+```
 
-### Chat example
+3. Start dependencies with Docker Compose:
+
+```bash
+docker compose up -d
+```
+
+4. Run the API server:
+
+```bash
+uvicorn src.api.main:app --reload
+```
+
+The HTTP API will be available at `http://localhost:8000`.
+
+## Important environment variables
+
+- `OPENAI_API_KEY`: API key for embeddings and chat/extraction.
+- `POSTGRES_DSN`: Postgres connection string (used for episodes & profiles).
+- `QDRANT_HOST`: Qdrant host URL (used for vector storage).
+- `CONSOLIDATION_CRON`: Cron expression for nightly consolidation (optional).
+
+See `.env.example` for defaults and more options.
+
+## API (most-used endpoints)
+
+- `POST /chat` — Send a user message. Body: `{"user_id": "alice", "message": "..."}`. Returns a reply plus which memories were used.
+- `GET /users/{id}/memories` — Get semantic memories and preference profile for a user.
+- `DELETE /users/{id}/memories/{mem_id}` — Delete one semantic memory.
+- `DELETE /users/{id}` — Delete all data for a user (right-to-be-forgotten).
+- `POST /consolidate/{id}` — Manually trigger consolidation for a user.
+
+Example: send a chat message
 
 ```bash
 curl -X POST http://localhost:8000/chat \
   -H "Content-Type: application/json" \
-  -d '{"user_id": "alice", "message": "I prefer short answers. I am working on a FastAPI project."}'
+  -d '{"user_id": "alice", "message": "I prefer short answers. I work on a FastAPI project."}'
 ```
 
-## Graph overview
+Example: trigger consolidation
 
-**Per-turn graph:**
-```
-START
-  │
-  ▼
-retrieve_memories      (parallel: Qdrant similarity + Postgres episodes + profile load)
-  │
-  ▼
-build_context          (rank by similarity × recency-decay × importance, inject top-K)
-  │
-  ▼
-respond                (gpt-4o-mini with memory context in system prompt)
-  │
-  ▼
-extract_memories       (structured LLM call → ExtractedMemories Pydantic schema)
-  │
-  ▼
-write_memories         (upsert semantic with dedup; insert episodes; patch profile)
-  │
-  ▼
-END
+```bash
+curl -X POST http://localhost:8000/consolidate/alice
 ```
 
-**Background consolidation graph (nightly, all users):**
-```
-START
-  │
-  ▼
-load_old_episodes      (episodes older than 30 days)
-  │
-  ▼
-cluster_similar        (k-means, k chosen by silhouette score)
-  │
-  ▼
-merge_clusters         (LLM summarises each cluster → single semantic memory)
-  │
-  ▼
-write_summaries        (upsert merged memories into Qdrant, importance=0.8)
-  │
-  ▼
-prune_originals        (delete merged raw episodes from Postgres)
-  │
-  ▼
-END
-```
+## How it works (short)
 
-See `ARCHITECTURE.md` for full design rationale and interview Q&A.
+- Per-turn: the service loads semantic neighbors, recent episodic events, and the user's profile; it ranks and constructs a compact context; the LLM responds; an extraction step turns parts of the reply into structured memories that get written back.
+- Consolidation: a background job groups older episodes, summarizes clusters with the LLM, writes compact summaries to Qdrant, and removes or marks the raw episodes.
+
+## Where to look in code
+
+- Runtime entry: [project-07-memory-engine/src/api/main.py](project-07-memory-engine/src/api/main.py)
+- Graphs and nodes: [project-07-memory-engine/src/graph](project-07-memory-engine/src/graph)
+- Memory models: [project-07-memory-engine/src/models.py](project-07-memory-engine/src/models.py)
+
+For design rationale and diagrams see [project-07-memory-engine/ARCHITECTURE.md](project-07-memory-engine/ARCHITECTURE.md).
+
+## Troubleshooting
+
+- If Qdrant or Postgres fail to start, run `docker compose ps` and check logs with `docker compose logs qdrant` or `docker compose logs postgres`.
+- If embeddings fail, confirm `OPENAI_API_KEY` is set and reachable.
+
+## Tests & development
+
+Run the small unit tests in the `tests/` directory with `pytest` after installing dev requirements.
+
+---
+If you'd like, I can also add a short example script that exercises the `/chat` and `/consolidate` endpoints. Want that added?
