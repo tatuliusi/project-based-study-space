@@ -1,6 +1,6 @@
 # Project 6 — Scheduled Research-to-Report Pipeline
 
-A production-grade async pipeline that accepts a research topic, fans out to multiple parallel research branches, fact-checks claims, and delivers a formatted Markdown or PDF report — either on-demand or on a cron schedule.
+A production-ready async pipeline that accepts a research topic, fans out to multiple parallel research branches, fact-checks claims, and delivers a formatted Markdown or PDF report — on-demand or on a cron schedule.
 
 ## What this demonstrates
 
@@ -21,7 +21,9 @@ A production-grade async pipeline that accepts a research topic, fans out to mul
 - **Pydantic v2** — schemas for subtopics, findings, final report
 - **OpenAI** — synthesis and fact-checking agents
 
-## Setup
+## Quick start
+
+1. Create and activate a virtual environment, install deps, and copy the example env:
 
 ```bash
 cd project-06-research-pipeline
@@ -29,13 +31,55 @@ python -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 cp .env.example .env
-# Add OPENAI_API_KEY, TAVILY_API_KEY, REDIS_URL to .env
+# Populate .env with required keys (see Environment variables)
+```
 
-# Start Redis
+2. Start Redis (uses the included compose file):
+
+```bash
 docker compose up -d redis
+```
 
-# Start API
+3. Start the API server:
+
+```bash
 uvicorn src.api.main:app --reload
+```
+
+4. (Optional) Start the scheduler for cron-driven runs:
+
+```bash
+python -m src.scheduler.scheduler
+```
+
+## Environment variables
+
+- `OPENAI_API_KEY` — OpenAI API key for synthesis and checks
+- `TAVILY_API_KEY` — (optional) Tavily/search API key for web searches
+- `REDIS_URL` — Redis connection string (e.g. `redis://localhost:6379/0`)
+- `REPORT_STORAGE_PATH` — (optional) local path to persist generated artifacts
+- `WEBHOOK_URL` — (optional) notify an external endpoint on job completion
+
+## API examples
+
+Submit a new report request:
+
+```bash
+curl -X POST http://localhost:8000/reports \
+  -H "Content-Type: application/json" \
+  -d '{"topic": "The future of renewable energy in Southeast Asia"}'
+```
+
+Poll job status:
+
+```bash
+curl http://localhost:8000/reports/<JOB_ID>/status
+```
+
+Download PDF after completion:
+
+```bash
+curl -o report.pdf http://localhost:8000/reports/<JOB_ID>/pdf
 ```
 
 ## API endpoints
@@ -82,4 +126,13 @@ decompose_topic          (break topic into 4–6 sub-topics)
 END
 ```
 
-See `ARCHITECTURE.md` for the full design.
+See `ARCHITECTURE.md` for the full design and [src/](src/) for implementation details.
+
+## Development notes
+
+- Core API: `src.api.main` and `src.api.*` handlers
+- Graph & pipeline: `src.graph`, `src.pipeline`, and `src.nodes` (LangGraph orchestration)
+- Scheduler entrypoint: `src.scheduler.scheduler`
+- Rendering templates: `templates/` (HTML used by WeasyPrint)
+
+If you'd like, I can also add a small example script to submit sample jobs automatically.
