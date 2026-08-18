@@ -15,16 +15,28 @@ _splitter = RecursiveCharacterTextSplitter(chunk_size=CHUNK_SIZE, chunk_overlap=
 
 
 def build_vectorstore(file_paths: list[str]) -> FAISS:
+    if not file_paths:
+        raise ValueError("Please provide at least one file to index.")
+
+    supported_suffixes = {".pdf", ".txt"}
+    normalized_paths = [str(path) for path in file_paths if str(path).lower().endswith(tuple(supported_suffixes))]
+    if not normalized_paths:
+        raise ValueError("Only PDF and TXT files are supported for indexing.")
+
     docs = []
-    for path in file_paths:
-        if path.endswith(".pdf"):
+    for path in normalized_paths:
+        if path.lower().endswith(".pdf"):
             loader = PyPDFLoader(path)
         else:
             loader = TextLoader(path)
         docs.extend(loader.load())
 
+    if not docs:
+        raise ValueError("No readable document content was found in the selected files.")
+
     chunks = _splitter.split_documents(docs)
     store = FAISS.from_documents(chunks, _embeddings)
+    VECTORSTORE_PATH.parent.mkdir(parents=True, exist_ok=True)
     store.save_local(str(VECTORSTORE_PATH))
     return store
 

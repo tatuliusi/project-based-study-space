@@ -43,13 +43,19 @@ def build_graph(store: FAISS) -> StateGraph:
     return graph.compile()
 
 
-def ask(query: str, store: FAISS) -> tuple[str, QueryTrace]:
-    trace = QueryTrace(query=query)
+def ask(query: str, store: FAISS | None) -> tuple[str, QueryTrace]:
+    cleaned_query = (query or "").strip()
+    if not cleaned_query:
+        raise ValueError("Query must be a non-empty string.")
+    if store is None:
+        raise ValueError("A vector store is required. Please index at least one document first.")
+
+    trace = QueryTrace(query=cleaned_query)
     app = build_graph(store)
 
     with get_openai_callback() as cb:
         result = app.invoke({
-            "query": query,
+            "query": cleaned_query,
             "documents": [],
             "generation": "",
             "rewrite_count": 0,

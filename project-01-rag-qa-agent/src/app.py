@@ -30,16 +30,23 @@ with st.sidebar:
         with st.spinner("Indexing..."):
             tmp_paths = []
             for f in uploaded:
-                suffix = ".pdf" if f.name.endswith(".pdf") else ".txt"
+                suffix = ".pdf" if f.name.lower().endswith(".pdf") else ".txt"
                 with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
                     tmp.write(f.read())
                     tmp_paths.append(tmp.name)
 
-            st.session_state.store = build_vectorstore(tmp_paths)
-            for p in tmp_paths:
-                os.unlink(p)
+            try:
+                st.session_state.store = build_vectorstore(tmp_paths)
+                st.success(f"Indexed {len(uploaded)} file(s).")
+            except ValueError as exc:
+                st.error(str(exc))
+            finally:
+                for p in tmp_paths:
+                    if os.path.exists(p):
+                        os.unlink(p)
 
-        st.success(f"Indexed {len(uploaded)} file(s).")
+    if not uploaded:
+        st.caption("Choose one or more PDF/TXT files to begin.")
 
     if st.session_state.store:
         st.success("Vector store ready.")
