@@ -1,22 +1,25 @@
 # Project 02 — Multi-source Research Agent
 
-A LangGraph agent that researches any question by planning web searches, evaluating coverage, looping to fill gaps, and producing a Pydantic-structured report.
+A lightweight research assistant built with LangGraph that plans searches, checks whether the answers are complete, fills gaps, and then produces a structured final report.
 
-## What this demonstrates
+This project is a good example of an agent loop where the model does more than answer once: it decides what it still needs to know, searches again if necessary, and stops when the answer is strong enough.
 
-- LangGraph tool nodes with real external APIs
-- Self-evaluation loop — the agent decides when it has enough information
-- Conditional routing based on coverage verdict
-- Structured LLM output with Pydantic v2
-- Iterative search with gap-filling across up to 3 iterations
+## What this project demonstrates
 
-## Stack
+- LangGraph orchestration with tool-based node execution
+- Multi-step research planning and iterative search
+- Self-evaluation of completeness before finalizing a response
+- Conditional routing based on coverage gaps
+- Pydantic v2 structured output for reliable report generation
+- Streamlit-based local interface with a visible trace of the workflow
 
-- **LangGraph** — graph orchestration with conditional loop
-- **Tavily API** — real-time web search
-- **OpenAI GPT-4o-mini** — planning, evaluation, and report generation
-- **Pydantic v2** — structured output schemas
-- **Streamlit** — UI with live trace sidebar
+## Tech stack
+
+- **LangGraph** — graph orchestration and control flow
+- **Tavily API** — live web search for research grounding
+- **OpenAI GPT-4o-mini** — planning, evaluation, and synthesis
+- **Pydantic v2** — validated output models
+- **Streamlit** — local app interface
 
 ## Setup
 
@@ -26,23 +29,31 @@ python -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 cp .env.example .env
-# Add OPENAI_API_KEY and TAVILY_API_KEY to .env
 ```
 
-Get a free Tavily API key at https://tavily.com.
+Then add your keys to `.env`:
 
-## Run
+- `OPENAI_API_KEY`
+- `TAVILY_API_KEY`
+
+You can get a free Tavily API key at https://tavily.com.
+
+## Run locally
 
 ```bash
 streamlit run src/app.py
 ```
 
-## Graph
+## Agent flow
 
-```
+```text
 START → plan → search → evaluate
-  ↑ (gaps found, iter ≤ 3)    ↓ (sufficient OR iter > 3)
-  └──────────────────────── generate → END
+  ↑ (missing information, iter < 3)   ↓ (sufficient or max iterations reached)
+  └──────────────────────────────────────────── generate → END
 ```
 
-See `ARCHITECTURE.md` for the full design.
+The agent can run up to a few search cycles, filling in gaps before generating the final answer.
+
+## More details
+
+See [ARCHITECTURE.md](ARCHITECTURE.md) for the graph design, data flow, and implementation notes.
