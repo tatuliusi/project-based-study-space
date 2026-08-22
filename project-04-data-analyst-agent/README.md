@@ -35,13 +35,4 @@ cp .env.example .env
 python src/main.py --file data/sample.csv --question "What are the top 5 revenue drivers?"
 ```
 
-## Graph overview
 
-```
-START → load_data → plan_analysis → generate_code → execute_code
-      → [error] → fix_code → execute_code
-      → [success] → interpret_results → [more_analysis] → plan_analysis
-                                      → [done] → generate_report → END
-```
-
-See `ARCHITECTURE.md` for the full design.
