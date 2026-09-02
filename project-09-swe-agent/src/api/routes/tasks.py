@@ -75,3 +75,12 @@ async def get_task_pr(task_id: str) -> TaskPRResponse:
     if not task:
         raise HTTPException(status_code=404, detail="task not found")
     return TaskPRResponse(task_id=task_id, pr_url=task.get("pr_url"))
+
+
+@router.delete("/{task_id}", status_code=204)
+async def delete_task(task_id: str) -> None:
+    task = await get_task(task_id)
+    if not task:
+        raise HTTPException(status_code=404, detail="task not found")
+    if task["status"] in ("running", "awaiting_approval"):
+        raise HTTPException(status_code=409, detail="cannot delete a task that is still active")
