@@ -39,8 +39,10 @@ class ProgressTracker:
         return delta.total_seconds()
 
     def iteration_count(self) -> int:
-        test_events = [e for e in self.events if e.node in ("run_tests", "patch")]
-        return len([e for e in test_events if e.node == "run_tests"])
+        return sum(1 for e in self.events if e.node == "run_tests")
+
+    def failed_nodes(self) -> list[str]:
+        return [e.node for e in self.events if e.node in ("analyze_failures", "patch")]
 
     def to_dict(self) -> dict[str, Any]:
         return {
