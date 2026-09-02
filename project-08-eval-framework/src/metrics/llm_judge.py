@@ -74,6 +74,11 @@ async def judge(
     expected: str | None = None,
     context: list[str] | None = None,
 ) -> JudgeOutput:
+    if metric_name == "faithfulness" and context:
+        from src.metrics.faithfulness import compute_faithfulness
+        score, rationale = await compute_faithfulness(actual, context)
+        return JudgeOutput(score=score, rationale=rationale)
+
     rubric = RUBRICS.get(metric_name, "Score quality on a 0.0-1.0 scale.")
     prompt = _JUDGE_TEMPLATE.format(
         metric_name=metric_name,
