@@ -10,7 +10,7 @@ from src.models import (
     Patch,
     PlanStep,
     TaskRecord,
-    TestRun,
+    SWETestRun,
 )
 
 
@@ -63,7 +63,7 @@ def test_implementation_plan_roundtrip(sample_plan):
 
 
 def test_test_run_defaults():
-    tr = TestRun(iteration=0, exit_code=0, passed=3, failed=0, duration_ms=100)
+    tr = SWETestRun(iteration=0, exit_code=0, passed=3, failed=0, duration_ms=100)
     assert tr.errors == []
     assert tr.raw_output == ""
 

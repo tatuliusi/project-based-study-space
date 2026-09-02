@@ -3,7 +3,7 @@ from __future__ import annotations
 import pytest
 
 from src.graph.nodes import should_iterate
-from src.models import TestRun
+from src.models import SWETestRun
 
 
 def _state_with_results(test_results, iteration=1, max_iterations=5):
@@ -42,14 +42,14 @@ def test_should_iterate_max_exceeded(failing_test_run):
 
 
 def test_should_iterate_uses_last_result():
-    passing = TestRun(iteration=0, exit_code=0, passed=3, failed=0, duration_ms=100)
-    failing = TestRun(iteration=1, exit_code=1, passed=2, failed=1, duration_ms=200)
+    passing = SWETestRun(iteration=0, exit_code=0, passed=3, failed=0, duration_ms=100)
+    failing = SWETestRun(iteration=1, exit_code=1, passed=2, failed=1, duration_ms=200)
     state = _state_with_results([passing, failing], iteration=2)
     assert should_iterate(state) == "iterate"
 
 
 def test_should_iterate_exits_on_pass_after_fail():
-    failing = TestRun(iteration=0, exit_code=1, passed=0, failed=2, duration_ms=100)
-    passing = TestRun(iteration=1, exit_code=0, passed=2, failed=0, duration_ms=100)
+    failing = SWETestRun(iteration=0, exit_code=1, passed=0, failed=2, duration_ms=100)
+    passing = SWETestRun(iteration=1, exit_code=0, passed=2, failed=0, duration_ms=100)
     state = _state_with_results([failing, passing], iteration=2)
     assert should_iterate(state) == "approve"

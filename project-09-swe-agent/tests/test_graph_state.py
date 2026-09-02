@@ -3,7 +3,7 @@ from __future__ import annotations
 import pytest
 
 from src.graph.state import SWEState
-from src.models import Issue, Patch, TestRun
+from src.models import Issue, Patch, SWETestRun
 
 
 def test_swe_state_is_dict_subtype():
@@ -42,7 +42,7 @@ def test_swe_state_accepts_issue(sample_issue):
 
 
 def test_swe_state_accumulates_test_results(sample_test_run, failing_test_run):
-    results: list[TestRun] = [sample_test_run, failing_test_run]
+    results: list[SWETestRun] = [sample_test_run, failing_test_run]
     state: SWEState = {
         "task_id": "t2",
         "issue_url": "u",

@@ -11,7 +11,7 @@ from src.models import (
     Issue,
     Patch,
     PlanStep,
-    TestRun,
+    SWETestRun,
 )
 
 
@@ -46,8 +46,8 @@ def sample_plan(sample_issue) -> ImplementationPlan:
 
 
 @pytest.fixture
-def sample_test_run() -> TestRun:
-    return TestRun(
+def sample_test_run() -> SWETestRun:
+    return SWETestRun(
         iteration=0,
         exit_code=0,
         passed=5,
@@ -58,8 +58,8 @@ def sample_test_run() -> TestRun:
 
 
 @pytest.fixture
-def failing_test_run() -> TestRun:
-    return TestRun(
+def failing_test_run() -> SWETestRun:
+    return SWETestRun(
         iteration=1,
         exit_code=1,
         passed=4,

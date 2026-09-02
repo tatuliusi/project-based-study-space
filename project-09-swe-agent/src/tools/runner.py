@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 from langchain_core.tools import tool
 
 from ..config import settings
-from ..models import CommandResult, TestRun
+from ..models import CommandResult, SWETestRun
 
 if TYPE_CHECKING:
     from ..sandbox import Sandbox
@@ -46,7 +46,7 @@ def run_command(cmd: str) -> CommandResult:
 
 
 @tool
-def run_tests(test_path: str = "tests/", iteration: int = 0) -> TestRun:
+def run_tests(test_path: str = "tests/", iteration: int = 0) -> SWETestRun:
     """Run pytest inside the Docker sandbox and return structured results."""
     box = _require_sandbox()
     start = time.monotonic()
@@ -54,7 +54,7 @@ def run_tests(test_path: str = "tests/", iteration: int = 0) -> TestRun:
     duration_ms = int((time.monotonic() - start) * 1000)
 
     passed, failed, errors = _parse_pytest_output(output)
-    return TestRun(
+    return SWETestRun(
         iteration=iteration,
         exit_code=exit_code,
         passed=passed,

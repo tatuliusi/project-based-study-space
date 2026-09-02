@@ -8,14 +8,27 @@ from langgraph.types import interrupt
 
 from ..config import settings
 from ..github_client import fetch_issue
-from ..models import ImplementationPlan, Patch, PlanStep, TestRun
+from ..models import ImplementationPlan, Patch, PlanStep, SWETestRun
 from ..repo_map import build_repo_map, repo_map_to_context
 from ..tools import apply_patch, run_tests, set_sandbox
 from ..sandbox import Sandbox
 from .state import SWEState
 
-_llm = ChatOpenAI(model="gpt-4o", temperature=0)
-_llm_structured_plan = _llm.with_structured_output(ImplementationPlan)
+_llm: ChatOpenAI | None = None
+_llm_structured_plan = None
+
+
+def _get_llm() -> ChatOpenAI:
+    global _llm, _llm_structured_plan
+    if _llm is None:
+        _llm = ChatOpenAI(model="gpt-4o", temperature=0)
+        _llm_structured_plan = _llm.with_structured_output(ImplementationPlan)
+    return _llm
+
+
+def _get_plan_llm():
+    _get_llm()
+    return _llm_structured_plan
 
 
 def _system(text: str) -> dict[str, str]:
@@ -35,7 +48,7 @@ def explore_repo(state: SWEState) -> dict[str, Any]:
     repo_path = state.get("repo_path", ".")
 
     def summarizer(content: str) -> str:
-        resp = _llm.invoke([
+        resp = _get_llm().invoke([
             _system("Summarize this Python module in one sentence. Be specific about what it does."),
             _human(content),
         ])
@@ -57,7 +70,7 @@ def create_plan(state: SWEState) -> dict[str, Any]:
         "Create an implementation plan to resolve this issue."
     )
 
-    plan: ImplementationPlan = _llm_structured_plan.invoke([
+    plan: ImplementationPlan = _get_plan_llm().invoke([
         _system(
             "You are a senior software engineer. Given a GitHub issue and repository structure, "
             "produce a structured implementation plan."
@@ -89,7 +102,7 @@ def implement(state: SWEState) -> dict[str, Any]:
             f"Current file content:\n```\n{file_context}\n```\n\n"
             "Produce a unified diff that implements this step. Output ONLY the diff, no explanation."
         )
-        resp = _llm.invoke([
+        resp = _get_llm().invoke([
             _system("You produce unified diffs. Output only the diff block, no markdown fences."),
             _human(prompt),
         ])
@@ -125,7 +138,7 @@ def analyze_failures(state: SWEState) -> dict[str, Any]:
     patch_history = "\n---\n".join(
         f"Iteration {p.iteration}: {p.file_path}\n{p.unified_diff}" for p in patches[-3:]
     )
-    resp = _llm.invoke([
+    resp = _get_llm().invoke([
         _system(
             "You are a debugging expert. Analyze test failures and identify which recent patch caused them. "
             "Reply in plain text with the root cause and the file that needs fixing."
@@ -146,7 +159,7 @@ def patch_node(state: SWEState) -> dict[str, Any]:
     test_results = state.get("test_results", [])
     last_output = test_results[-1].raw_output[:3000] if test_results else ""
 
-    resp = _llm.invoke([
+    resp = _get_llm().invoke([
         _system("You produce unified diffs to fix failing tests. Output only the diff block."),
         _human(
             f"Error analysis:\n{error_analysis}\n\n"

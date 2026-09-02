@@ -48,7 +48,7 @@ def _collect(
         return
 
     for entry in entries:
-        if entry.name in _SKIP_DIRS:
+        if entry.name in _SKIP_DIRS or entry.name.startswith("."):
             continue
         if entry.is_dir():
             if remaining > 0:

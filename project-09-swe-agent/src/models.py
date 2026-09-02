@@ -43,7 +43,7 @@ class Patch(BaseModel):
     description: str
 
 
-class TestRun(BaseModel):
+class SWETestRun(BaseModel):
     iteration: int
     exit_code: int
     passed: int

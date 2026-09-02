@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import TypedDict
 
-from ..models import FileInfo, ImplementationPlan, Issue, Patch, TestRun
+from ..models import FileInfo, ImplementationPlan, Issue, Patch, SWETestRun
 
 
 class SWEState(TypedDict, total=False):
@@ -13,7 +13,7 @@ class SWEState(TypedDict, total=False):
     repo_map: dict[str, FileInfo]
     plan: ImplementationPlan | None
     patches: list[Patch]
-    test_results: list[TestRun]
+    test_results: list[SWETestRun]
     iteration: int
     max_iterations: int
     approved: bool
