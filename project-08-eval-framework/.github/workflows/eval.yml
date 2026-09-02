@@ -1,0 +1,31 @@
+name: LLM Eval Gate
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  eval:
+    name: Run LLM eval quality gate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run eval gate
+        run: |
+          curl -f -X POST "${{ vars.EVAL_SERVICE_URL }}/webhook/github" \
+            -H "Content-Type: application/json" \
+            -H "X-Github-Event: push" \
+            -d '{
+              "repo": "${{ github.repository }}",
+              "sha": "${{ github.sha }}",
+              "dataset_id": "${{ vars.EVAL_DATASET_ID }}",
+              "app_config": {
+                "app_id": "${{ github.repository }}",
+                "model": "${{ vars.APP_MODEL }}",
+                "prompt_version": "${{ github.sha }}"
+              }
+            }'
