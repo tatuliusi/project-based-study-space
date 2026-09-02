@@ -4,6 +4,7 @@ import re
 
 
 def _normalize(text: str) -> str:
+    text = re.sub(r"[^\w\s]", "", text)
     return re.sub(r"\s+", " ", text.strip().lower())
 
 
