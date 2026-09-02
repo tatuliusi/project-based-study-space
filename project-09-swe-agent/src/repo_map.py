@@ -10,16 +10,22 @@ _LANGUAGE_MAP: dict[str, str] = {
     ".py": "python",
     ".js": "javascript",
     ".ts": "typescript",
+    ".tsx": "typescript",
+    ".jsx": "javascript",
     ".go": "go",
     ".java": "java",
     ".rs": "rust",
     ".rb": "ruby",
     ".sh": "shell",
+    ".bash": "shell",
     ".yml": "yaml",
     ".yaml": "yaml",
     ".json": "json",
     ".toml": "toml",
     ".md": "markdown",
+    ".css": "css",
+    ".html": "html",
+    ".sql": "sql",
 }
 
 _SKIP_DIRS = {
