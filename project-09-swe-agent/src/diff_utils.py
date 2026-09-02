@@ -46,3 +46,9 @@ def patches_to_full_diff(patches: list[dict]) -> str:
         header = f"# {patch.get('file_path', 'unknown')} (iteration {patch.get('iteration', 0)})"
         sections.append(f"{header}\n{patch.get('unified_diff', '')}")
     return "\n\n".join(sections)
+
+
+def diff_summary(diff: str) -> str:
+    added, removed = count_changed_lines(diff)
+    files = extract_affected_files(diff)
+    return f"+{added}/-{removed} across {len(files)} file(s)"
