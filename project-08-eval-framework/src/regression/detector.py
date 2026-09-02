@@ -9,7 +9,7 @@ from src.models import MetricStats, Regression, RegressionReport
 def _classify_severity(delta: float) -> Literal["minor", "major", "critical"]:
     if delta < -0.2:
         return "critical"
-    if delta < -0.1:
+    if delta < -0.05:
         return "major"
     return "minor"
 
