@@ -57,3 +57,23 @@ def push_branch(repo_dir: str, remote: str = "origin") -> None:
         check=True,
         capture_output=True,
     )
+
+
+def list_changed_files(repo_dir: str) -> list[str]:
+    result = subprocess.run(
+        ["git", "diff", "--name-only", "HEAD"],
+        cwd=repo_dir,
+        capture_output=True,
+        text=True,
+    )
+    return [line.strip() for line in result.stdout.splitlines() if line.strip()]
+
+
+def get_current_branch(repo_dir: str) -> str:
+    result = subprocess.run(
+        ["git", "branch", "--show-current"],
+        cwd=repo_dir,
+        capture_output=True,
+        text=True,
+    )
+    return result.stdout.strip()
