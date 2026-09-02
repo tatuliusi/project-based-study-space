@@ -20,6 +20,11 @@ def set_sandbox(sandbox: "Sandbox") -> None:
     _sandbox = sandbox
 
 
+def clear_sandbox() -> None:
+    global _sandbox
+    _sandbox = None
+
+
 def _require_sandbox() -> "Sandbox":
     if _sandbox is None:
         raise RuntimeError("Sandbox not initialised. Call set_sandbox() first.")
