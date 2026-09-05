@@ -47,6 +47,12 @@ python -m src.retriever --ingest docs/
 streamlit run src/app.py
 ```
 
+Run quality checks
+
+```bash
+python -m unittest discover -s tests -v
+```
+
 Project layout
 
 ```
