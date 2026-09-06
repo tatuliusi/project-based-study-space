@@ -12,6 +12,11 @@ from src.api.sse import stream_debate
 router = APIRouter()
 
 
+@router.get("/health")
+async def health():
+    return {"status": "ok"}
+
+
 class DebateRequest(BaseModel):
     question: str
     domain: str = "general"
