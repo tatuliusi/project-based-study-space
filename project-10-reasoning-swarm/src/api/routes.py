@@ -42,7 +42,14 @@ async def create_debate(req: DebateRequest, session: AsyncSession = Depends(get_
     }
     final_state = await debate_graph.ainvoke(initial_state)
     await save_debate(session, final_state)
-    return {"debate_id": debate_id, "consensus_reached": final_state["consensus_reached"]}
+    final = final_state.get("final_answer")
+    return {
+        "debate_id": debate_id,
+        "domain": req.domain,
+        "rounds_completed": final_state["current_round"],
+        "consensus_reached": final_state["consensus_reached"],
+        "consensus_confidence": final.confidence if final else None,
+    }
 
 
 @router.get("/debates/{debate_id}/stream")
