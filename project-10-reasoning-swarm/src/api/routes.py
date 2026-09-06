@@ -4,7 +4,7 @@ from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.db.database import get_session
-from src.db.repo import save_debate, load_debate
+from src.db.repo import save_debate, load_debate, list_debates
 from src.graph.debate_graph import debate_graph
 from src.models import DebateState
 from src.api.sse import stream_debate
@@ -25,6 +25,14 @@ class DebateRequest(BaseModel):
 
 class ChallengeRequest(BaseModel):
     challenge_text: str
+
+
+@router.get("/debates")
+async def get_debates(
+    limit: int = 20, offset: int = 0, session: AsyncSession = Depends(get_session)
+):
+    records = await list_debates(session, limit=limit, offset=offset)
+    return records
 
 
 @router.post("/debates", status_code=201)
