@@ -1,7 +1,7 @@
 import uuid
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.db.database import get_session
 from src.db.repo import save_debate, load_debate, list_debates
@@ -21,6 +21,13 @@ class DebateRequest(BaseModel):
     question: str
     domain: str = "general"
     max_rounds: int = 3
+
+    @field_validator("question")
+    @classmethod
+    def question_must_not_be_empty(cls, v: str) -> str:
+        if not v.strip():
+            raise ValueError("question must not be empty")
+        return v.strip()
 
 
 class ChallengeRequest(BaseModel):
