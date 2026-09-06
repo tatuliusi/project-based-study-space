@@ -51,3 +51,10 @@ async def load_debate(session: AsyncSession, debate_id: str) -> DebateRecord | N
         .where(DebateRecord.id == debate_id)
     )
     return result.scalar_one_or_none()
+
+
+async def list_debates(session: AsyncSession, limit: int = 20, offset: int = 0) -> list[DebateRecord]:
+    result = await session.execute(
+        select(DebateRecord).order_by(DebateRecord.created_at.desc()).limit(limit).offset(offset)
+    )
+    return list(result.scalars().all())
