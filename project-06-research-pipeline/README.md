@@ -131,7 +131,7 @@ See `ARCHITECTURE.md` for the full design and [src/](src/) for implementation de
 ## Development notes
 
 - Core API: `src.api.main` and `src.api.*` handlers
-- Graph & pipeline: `src.graph`, `src.pipeline`, and `src.nodes` (LangGraph orchestration)
+- Graph & pipeline: `src.graph` (LangGraph orchestration)
 - Scheduler entrypoint: `src.scheduler.scheduler`
 - Rendering templates: `templates/` (HTML used by WeasyPrint)
 
