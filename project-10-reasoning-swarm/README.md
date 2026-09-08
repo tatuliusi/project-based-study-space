@@ -30,7 +30,7 @@ cp .env.example .env
 # Add OPENAI_API_KEY, DATABASE_URL to .env
 
 docker compose up -d db
-python src/db/migrate.py
+python -m src.db.migrate
 
 uvicorn src.api.main:app --reload
 ```
