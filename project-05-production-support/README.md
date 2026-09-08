@@ -58,4 +58,4 @@ START → triage → [billing] → billing_agent → respond → END
                → [escalate] → human_handoff → END
 ```
 
-See `ARCHITECTURE.md` for the full design.
+See [ARCHITECTURE.md](ARCHITECTURE.md) for the full design.
