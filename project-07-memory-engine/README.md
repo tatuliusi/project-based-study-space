@@ -105,7 +105,7 @@ For design rationale and diagrams see [project-07-memory-engine/ARCHITECTURE.md]
 
 ## Tests & development
 
-Run the small unit tests in the `tests/` directory with `pytest` after installing dev requirements.
+Run the small unit tests in the `tests/` directory with `pytest` after installing the project requirements.
 
 ---
 If you'd like, I can also add a short example script that exercises the `/chat` and `/consolidate` endpoints. Want that added?
