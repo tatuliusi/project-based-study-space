@@ -13,6 +13,7 @@ Evaluation infrastructure for LLM applications: run datasets through an app unde
 ## Quick start
 
 ```bash
+cd project-08-eval-framework
 cp .env.example .env
 # fill in OPENAI_API_KEY
 
