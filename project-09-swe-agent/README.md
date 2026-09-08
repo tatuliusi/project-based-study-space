@@ -33,6 +33,8 @@ cp .env.example .env
 uvicorn src.api.main:app --reload
 ```
 
+Run the test suite with `pytest tests/ -v` before starting the API.
+
 ## API endpoints
 
 | Method | Path | Description |
