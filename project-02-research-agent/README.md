@@ -36,7 +36,7 @@ Then add your keys to `.env`:
 - `OPENAI_API_KEY`
 - `TAVILY_API_KEY`
 
-You can get a free Tavily API key at https://tavily.com.
+You can get a Tavily API key at [tavily.com](https://tavily.com).
 
 ## Run locally
 
