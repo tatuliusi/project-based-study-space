@@ -35,4 +35,6 @@ cp .env.example .env
 python src/main.py --file data/sample.csv --question "What are the top 5 revenue drivers?"
 ```
 
+The repository includes `data/sample.csv` for a first local run.
+
 
