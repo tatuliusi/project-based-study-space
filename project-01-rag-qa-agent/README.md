@@ -35,13 +35,7 @@ cp .env.example .env
 # Edit .env and set OPENAI_API_KEY and any other provider keys
 ```
 
-3. (Optional) Add test documents to `docs/` or run the provided ingestion helper:
-
-```bash
-python -m src.retriever --ingest docs/
-```
-
-4. Start the Streamlit UI:
+3. Start the Streamlit UI and upload PDF or TXT files from the sidebar:
 
 ```bash
 streamlit run src/app.py
