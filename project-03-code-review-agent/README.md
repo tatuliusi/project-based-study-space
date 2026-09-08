@@ -77,7 +77,6 @@ project-03-code-review-agent/
 ├── requirements.txt
 ├── README.md
 ├── ARCHITECTURE.md
-└── .venv/
 ```
 
 ## Graph overview
