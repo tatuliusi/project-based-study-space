@@ -28,6 +28,8 @@ class Settings(BaseSettings):
         "cat",
         "find",
         "grep",
+        "head",
+        "wc",
     ]
 
 
