@@ -19,6 +19,8 @@ from src.state import AnalysisState
 _MAX_FIX_ATTEMPTS = 2
 _CHARTS_DIR = "charts"
 _MAX_OUTPUT_CHARS = 2000
+_MAX_PRIOR_OUTPUT_CHARS = 1000
+_MAX_STEP_ERROR_CHARS = 500
 
 _llm_mini = ChatOpenAI(model="gpt-4o-mini", temperature=0)
 _llm = ChatOpenAI(model="gpt-4o", temperature=0)
@@ -76,7 +78,7 @@ def generate_code(state: AnalysisState) -> dict:
     prior_output = ""
     if state["code_history"]:
         last = state["code_history"][-1]
-        prior_output = f"\nPrevious step output (for context):\n{last.stdout[:1000]}"
+        prior_output = f"\nPrevious step output (for context):\n{last.stdout[:_MAX_PRIOR_OUTPUT_CHARS]}"
 
     llm = _llm_mini.with_structured_output(GeneratedCode)
     result: GeneratedCode = llm.invoke([
@@ -172,7 +174,7 @@ def interpret_results(state: AnalysisState) -> dict:
         {"role": "user", "content": (
             f"Completed step: {last.step}\n"
             f"Output:\n{last.stdout[:2000]}\n"
-            f"Errors (if any):\n{last.stderr[:500]}\n"
+            f"Errors (if any):\n{last.stderr[:_MAX_STEP_ERROR_CHARS]}\n"
             f"Remaining steps: {state['analysis_plan'][step_idx + 1:]}"
         )},
     ])
