@@ -20,7 +20,7 @@ class SemanticMemory(BaseModel):
     embedding: list[float] = Field(default_factory=list)
     source_turn_id: str = ""
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
-    importance: float = 0.5
+    importance: float = Field(ge=0.0, le=1.0, default=0.5)
     access_count: int = 0
     last_accessed_at: datetime | None = None
 
