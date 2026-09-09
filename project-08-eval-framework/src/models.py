@@ -76,5 +76,5 @@ class EvalRun(BaseModel):
     dataset_id: str
     app_config: AppConfig
     baseline_run_id: str | None = None
-    status: Literal["pending", "running", "completed", "failed"] = "pending"
+    status: Literal["pending", "running", "completed", "failed", "cancelled"] = "pending"
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
