@@ -6,6 +6,9 @@ from src.retriever import retrieve
 
 _llm = ChatOpenAI(model="gpt-4o-mini", temperature=0)
 
+_MAX_REWRITE_ATTEMPTS = 2
+_MAX_DOC_PREVIEW_CHARS = 500
+
 
 class GradeResult(BaseModel):
     relevant: bool
@@ -48,7 +51,7 @@ def grade_relevance_node(state: dict) -> dict:
     query = state["query"]
     relevant = []
     for i, doc in enumerate(state["documents"]):
-        result = _grader.invoke(GRADE_PROMPT.format(query=query, doc=doc.page_content[:500]))
+        result = _grader.invoke(GRADE_PROMPT.format(query=query, doc=doc.page_content[:_MAX_DOC_PREVIEW_CHARS]))
         source = doc.metadata.get("source", "unknown")
         page = doc.metadata.get("page", "?")
         verdict = "relevant" if result.relevant else "irrelevant"
@@ -90,6 +93,6 @@ def rewrite_query_node(state: dict) -> dict:
 def route_after_grading(state: dict) -> str:
     if state["documents"]:
         return "generate"
-    if state.get("rewrite_count", 0) >= 2:
+    if state.get("rewrite_count", 0) >= _MAX_REWRITE_ATTEMPTS:
         return "generate"
     return "rewrite"
