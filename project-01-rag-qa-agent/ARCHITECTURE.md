@@ -4,6 +4,10 @@
 
 A plain LangChain RAG chain always retrieves and generates — it has no ability to check whether the retrieved documents are actually useful, and it cannot retry with a better query. LangGraph lets us model this as a stateful graph with conditional routing, which is how real production RAG systems work.
 
+## Implementation entry point
+
+The graph wiring and conditional routing are implemented in `src/graph.py`.
+
 ## State
 
 ```python
