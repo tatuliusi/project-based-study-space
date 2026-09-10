@@ -7,6 +7,10 @@ Projects 1–5 run on-demand in response to a single user message. This project 
 1. **Scheduled, unattended execution** — cron triggers, no human in the loop to start it
 2. **Parallel agent branches** — the `Send` API fans out research to N sub-agents simultaneously, then fans back in for synthesis
 
+## Implementation entry point
+
+The scheduled pipeline graph and fan-out routing are organized under `src/graph/`.
+
 ## State
 
 ```python
