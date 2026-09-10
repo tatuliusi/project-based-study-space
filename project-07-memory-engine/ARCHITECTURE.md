@@ -4,6 +4,10 @@
 
 Project 5 introduced per-session memory as a `user_context` blob. That is enough for a support system. A personal assistant needs memory that persists indefinitely, is queryable semantically, and actively improves over time. This project makes memory first-class.
 
+## Implementation entry point
+
+The per-turn and consolidation graphs are organized under `src/graph/`.
+
 ## The three memory tiers
 
 ### Tier 1: Semantic memory (Qdrant)
