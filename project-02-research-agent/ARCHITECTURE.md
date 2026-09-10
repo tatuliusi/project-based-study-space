@@ -4,6 +4,10 @@
 
 This agent has **agency over its own search strategy**. It decides what to search, evaluates what it found, and decides whether to search more or stop. Project 1 was a fixed retrieve-grade-generate pipeline. This project introduces a real agentic loop with conditional routing.
 
+## Implementation entry point
+
+The planning loop and conditional routing are implemented in `src/graph.py`.
+
 ## State
 
 ```python
