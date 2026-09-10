@@ -4,6 +4,10 @@
 
 Projects 6–9 each master one hard problem: scheduling, memory, evaluation, tool use. This project combines multi-agent coordination with a principled reasoning protocol. The result demonstrates the most sophisticated LangGraph pattern in the portfolio: composed subgraphs, agent-to-agent communication, and emergent reasoning through structured debate.
 
+## Implementation entry point
+
+The outer debate graph and composed round workflow are organized under `src/`.
+
 ## State
 
 ```python
