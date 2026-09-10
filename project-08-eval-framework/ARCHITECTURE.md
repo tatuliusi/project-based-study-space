@@ -4,6 +4,10 @@
 
 Every project so far builds LLM applications. This one asks: how do you know if they're working? Evaluation is a first-class skill for AI engineers — you need to be able to measure quality, detect regressions, and block bad deploys. This project implements that infrastructure from scratch.
 
+## Implementation entry point
+
+The evaluation workflow and quality-gate routing are organized under `src/graph/`.
+
 ## State
 
 ```python
