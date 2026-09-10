@@ -7,7 +7,11 @@ _llm = ChatOpenAI(model="gpt-4o-mini", temperature=0)
 _report_llm = ChatOpenAI(model="gpt-4o", temperature=0)
 _coverage_checker = _llm.with_structured_output(CoverageVerdict)
 _report_writer = _report_llm.with_structured_output(ResearchReport)
-_tavily = TavilySearch(max_results=5)
+_TAVILY_MAX_RESULTS = 5
+_MAX_ITERATIONS = 3
+_MAX_CONTENT_CHARS = 1000
+
+_tavily = TavilySearch(max_results=_TAVILY_MAX_RESULTS)
 
 PLAN_PROMPT = """You are a research strategist. Generate 3–5 targeted web search queries to research the following topic.
 
@@ -114,7 +118,7 @@ def generate_node(state: dict) -> dict:
 def route_after_evaluate(state: dict) -> str:
     verdict = state.get("coverage_verdict")
     iteration = state.get("iteration", 1)
-    if not verdict or verdict.sufficient or iteration > 3:
+    if not verdict or verdict.sufficient or iteration > _MAX_ITERATIONS:
         return "generate"
     return "plan"
 
@@ -128,5 +132,5 @@ def _format_results(results: list[dict]) -> str:
             continue
         seen.add(url)
         lines.append(f"[{r.get('title', 'No title')}] {url}")
-        lines.append(f"  {r.get('content', '')[:1000]}")
+        lines.append(f"  {r.get('content', '')[:_MAX_CONTENT_CHARS]}")
     return "\n".join(lines)

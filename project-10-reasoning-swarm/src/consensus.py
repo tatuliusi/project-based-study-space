@@ -3,6 +3,8 @@ from openai import AsyncOpenAI
 from src.config import settings
 from src.models import Round
 
+_DEFAULT_SCORE = 0.5
+
 
 async def compute_agreement_score(rnd: Round) -> float:
     """
@@ -19,7 +21,7 @@ async def compute_agreement_score(rnd: Round) -> float:
             critic_claims.extend(turn.key_claims)
 
     if not proposer_claims or not critic_claims:
-        return 0.5
+        return _DEFAULT_SCORE
 
     client = AsyncOpenAI(api_key=settings.openai_api_key)
     texts = proposer_claims + critic_claims
@@ -35,4 +37,4 @@ async def compute_agreement_score(rnd: Round) -> float:
             cos_sim = float(np.dot(pe, ce) / (np.linalg.norm(pe) * np.linalg.norm(ce)))
             scores.append(cos_sim)
 
-    return float(np.mean(scores)) if scores else 0.5
+    return float(np.mean(scores)) if scores else _DEFAULT_SCORE

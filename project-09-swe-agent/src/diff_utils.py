@@ -3,6 +3,9 @@ from __future__ import annotations
 import difflib
 from pathlib import Path
 
+_ENCODING = "utf-8"
+_ERRORS = "replace"
+
 
 def generate_unified_diff(original: str, modified: str, filename: str = "file") -> str:
     original_lines = original.splitlines(keepends=True)
@@ -18,8 +21,8 @@ def generate_unified_diff(original: str, modified: str, filename: str = "file") 
 
 
 def diff_from_file(original_path: str, modified_path: str) -> str:
-    orig = Path(original_path).read_text(encoding="utf-8", errors="replace")
-    mod = Path(modified_path).read_text(encoding="utf-8", errors="replace")
+    orig = Path(original_path).read_text(encoding=_ENCODING, errors=_ERRORS)
+    mod = Path(modified_path).read_text(encoding=_ENCODING, errors=_ERRORS)
     filename = Path(original_path).name
     return generate_unified_diff(orig, mod, filename)
 

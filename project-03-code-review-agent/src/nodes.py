@@ -8,6 +8,7 @@ from src.state import ReviewState
 
 _MAX_PATCH_CHARS = 3000
 _MAX_FILES = 25
+_TRUNCATION_NOTICE = "\n[truncated]"
 
 _SECURITY_SYSTEM = """You are a security-focused code reviewer. Analyze the PR diff for security vulnerabilities.
 
@@ -96,7 +97,7 @@ def _format_files(file_summaries: list[FileSummary]) -> str:
     for f in file_summaries:
         patch = f.patch[:_MAX_PATCH_CHARS]
         if len(f.patch) > _MAX_PATCH_CHARS:
-            patch += "\n[truncated]"
+            patch += _TRUNCATION_NOTICE
         blocks.append(f"### {f.filename} ({f.status})\n```diff\n{patch}\n```")
     return "\n\n".join(blocks)
 
