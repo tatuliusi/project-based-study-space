@@ -4,6 +4,10 @@
 
 This is the most tool-intensive project in the portfolio. Everything before this used tools for data retrieval (search, DB queries). This agent uses tools to *act* on external systems — read and write code, execute programs, interact with GitHub. It also has the longest planning horizon of any project here.
 
+## Implementation entry point
+
+The implementation loop and approval routing are organized under `src/graph/`.
+
 ## State
 
 ```python
