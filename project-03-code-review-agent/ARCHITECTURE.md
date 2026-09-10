@@ -6,6 +6,10 @@ This project uses a classic multi-agent pattern: one orchestrator delegates work
 
 The important design idea is that the workflow is not just three prompts in sequence. The three reviewer agents run concurrently against the same diff, and only after they finish does the synthesis step produce the final verdict.
 
+## Implementation entry point
+
+The supervisor graph and parallel worker dispatch are implemented in `src/graph.py`.
+
 ## State model
 
 ```python
