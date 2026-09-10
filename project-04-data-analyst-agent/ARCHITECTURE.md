@@ -4,6 +4,10 @@
 
 The agent generates code, runs it, reads the output, and decides what to do next. It loops until it has answered the user's question. Human-in-the-loop (HITL) checkpoints let the user approve the analysis plan before the agent starts executing code.
 
+## Implementation entry point
+
+The analysis loop and checkpoint routing are implemented in `src/graph.py`.
+
 ## State
 
 ```python
