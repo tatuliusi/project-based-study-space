@@ -9,6 +9,10 @@ Projects 1–4 demonstrate patterns. This one combines them all into something d
 - Human escalation (Project 4 HITL, extended)
 - Production deployment concerns
 
+## Implementation entry point
+
+The support workflow and escalation routing are organized under `src/graph/`.
+
 ## State
 
 ```python
