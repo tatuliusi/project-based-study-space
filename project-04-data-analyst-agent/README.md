@@ -8,7 +8,6 @@ Given a CSV or database, the agent writes Python code, executes it in a sandbox,
 - Safe sandboxed code execution
 - Human-in-the-loop checkpointing with LangGraph
 - Iterative reasoning — agent interprets output and decides what to analyze next
-- Chart generation and interpretation
 
 ## Stack
 
