@@ -150,8 +150,12 @@ def parse_diff_node(state: ReviewState) -> dict:
     return {"file_summaries": files_data}
 
 
+_WORKER_LLM = ChatOpenAI(model="gpt-4o-mini", temperature=0).with_structured_output(AgentFindings)
+_SUPERVISOR_LLM = ChatOpenAI(model="gpt-4o", temperature=0).with_structured_output(CodeReview)
+
+
 def _run_worker(state: ReviewState, system_prompt: str, findings_key: str) -> dict:
-    llm = ChatOpenAI(model="gpt-4o-mini", temperature=0).with_structured_output(AgentFindings)
+    llm = _WORKER_LLM
 
     files_block = _format_files(state.get("file_summaries", []))
     human = _WORKER_HUMAN.format(
@@ -181,7 +185,7 @@ def style_agent(state: ReviewState) -> dict:
 
 
 def generate_review(state: ReviewState) -> dict:
-    llm = ChatOpenAI(model="gpt-4o", temperature=0).with_structured_output(CodeReview)
+    llm = _SUPERVISOR_LLM
 
     human = _SUPERVISOR_HUMAN.format(
         pr_url=state["pr_url"],
