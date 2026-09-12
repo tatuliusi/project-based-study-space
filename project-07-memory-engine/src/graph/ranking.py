@@ -11,6 +11,7 @@ RECENCY_W = float(os.getenv("RECENCY_WEIGHT", "0.3"))
 IMPORTANCE_W = float(os.getenv("IMPORTANCE_WEIGHT", "0.2"))
 HALF_LIFE_DAYS = float(os.getenv("RECENCY_HALF_LIFE_DAYS", "7"))
 TOP_K = int(os.getenv("TOP_K_MEMORIES", "5"))
+_EPISODIC_BASE_SCORE = 0.1
 
 
 def _recency_decay(dt: datetime) -> float:
@@ -38,7 +39,7 @@ def rank_memories(
     for ep in episodes:
         recency = _recency_decay(ep.occurred_at)
         text = f"On {ep.occurred_at.date()}, you {ep.event_type.replace('_', ' ')} {ep.subject}: {ep.detail}"
-        score = RECENCY_W * recency + 0.1
+        score = RECENCY_W * recency + _EPISODIC_BASE_SCORE
         ranked.append(RankedMemory(content=text, score=score, source="episodic"))
 
     if profile:
