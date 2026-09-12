@@ -12,6 +12,11 @@ from src.tools.billing_api import billing_tools
 from src.tools.docs_search import technical_tools
 
 
+_MAX_CONTEXT_HINT_ITEMS = 2
+_MAX_ISSUE_HISTORY = 5
+_MAX_SESSION_MESSAGES = 6
+
+
 def _llm(temperature: float = 0) -> ChatOpenAI:
     return ChatOpenAI(model=os.getenv("OPENAI_MODEL", "gpt-4o-mini"), temperature=temperature)
 
@@ -80,7 +85,7 @@ async def triage_node(state: SupportState) -> dict:
     ctx = state.get("user_context")
     context_hint = ""
     if ctx and ctx.issue_history:
-        recent = ctx.issue_history[-2:]
+        recent = ctx.issue_history[-_MAX_CONTEXT_HINT_ITEMS:]
         context_hint = f"\n\nPrior session notes: {'; '.join(recent)}"
 
     result = await _llm().with_structured_output(TriageOutput).ainvoke(
@@ -192,7 +197,7 @@ async def summarize_session_node(state: SupportState) -> dict:
     from src.db import db_pool
 
     snippet = "\n".join(
-        f"{m.type}: {m.content[:300]}" for m in state["messages"][-6:]
+        f"{m.type}: {m.content[:300]}" for m in state["messages"][-_MAX_SESSION_MESSAGES:]
     )
     summary_msg = await _llm().ainvoke(
         [
@@ -203,7 +208,7 @@ async def summarize_session_node(state: SupportState) -> dict:
     summary = summary_msg.content
 
     ctx = state.get("user_context") or UserContext(user_id=state["user_id"])
-    new_history = (ctx.issue_history + [summary])[-5:]
+    new_history = (ctx.issue_history + [summary])[-_MAX_ISSUE_HISTORY:]
 
     if db_pool:
         async with db_pool.acquire() as conn:
