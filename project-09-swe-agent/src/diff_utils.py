@@ -28,8 +28,13 @@ def diff_from_file(original_path: str, modified_path: str) -> str:
 
 
 def count_changed_lines(diff: str) -> tuple[int, int]:
-    added = sum(1 for line in diff.splitlines() if line.startswith("+") and not line.startswith("+++"))
-    removed = sum(1 for line in diff.splitlines() if line.startswith("-") and not line.startswith("---"))
+    added = 0
+    removed = 0
+    for line in diff.splitlines():
+        if line.startswith("+") and not line.startswith("+++"):
+            added += 1
+        elif line.startswith("-") and not line.startswith("---"):
+            removed += 1
     return added, removed
 
 
