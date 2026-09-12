@@ -154,7 +154,7 @@ def fix_code(state: AnalysisState) -> dict:
         stdout="",
         stderr="",
         success=False,
-        attempt=attempt_num + 1,
+        attempt=attempt_num,
     )
     return {"code_history": state["code_history"][:-1] + [fixed], "fix_attempts": attempt_num}
 
