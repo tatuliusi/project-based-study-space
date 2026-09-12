@@ -8,6 +8,7 @@ _llm = ChatOpenAI(model="gpt-4o-mini", temperature=0)
 
 _MAX_REWRITE_ATTEMPTS = 2
 _MAX_DOC_PREVIEW_CHARS = 500
+_NO_CONTEXT_RESPONSE = "I could not find relevant information in the uploaded documents to answer this question."
 
 
 class GradeResult(BaseModel):
@@ -69,7 +70,7 @@ def generate_node(state: dict) -> dict:
 
     if not docs:
         trace.add("generate", "no relevant docs — returning fallback response")
-        return {"generation": "I could not find relevant information in the uploaded documents to answer this question."}
+        return {"generation": _NO_CONTEXT_RESPONSE}
 
     context = "\n\n".join(
         f"[Source: {doc.metadata.get('source', 'unknown')}, page {doc.metadata.get('page', '?')}]\n{doc.page_content}"
