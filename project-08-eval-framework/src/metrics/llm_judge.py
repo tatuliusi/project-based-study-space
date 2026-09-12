@@ -52,8 +52,14 @@ Respond in JSON: {{"score": <float 0.0-1.0>, "rationale": "<one sentence>"}}
 """
 
 
+_judge: ChatOpenAI | None = None
+
+
 def _build_judge() -> ChatOpenAI:
-    return ChatOpenAI(model=settings.judge_model, temperature=0.0)
+    global _judge
+    if _judge is None:
+        _judge = ChatOpenAI(model=settings.judge_model, temperature=0.0)
+    return _judge
 
 
 def _parse_judge_output(raw: str) -> JudgeOutput:
