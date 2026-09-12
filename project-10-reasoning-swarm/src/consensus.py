@@ -4,6 +4,7 @@ from src.config import settings
 from src.models import Round
 
 _DEFAULT_SCORE = 0.5
+_NORM_EPSILON = 1e-10
 
 
 async def compute_agreement_score(rnd: Round) -> float:
@@ -34,7 +35,7 @@ async def compute_agreement_score(rnd: Round) -> float:
     scores = []
     for pe in p_embs:
         for ce in c_embs:
-            cos_sim = float(np.dot(pe, ce) / (np.linalg.norm(pe) * np.linalg.norm(ce)))
+            cos_sim = float(np.dot(pe, ce) / (np.linalg.norm(pe) * np.linalg.norm(ce) + _NORM_EPSILON))
             scores.append(cos_sim)
 
     return float(np.mean(scores)) if scores else _DEFAULT_SCORE
