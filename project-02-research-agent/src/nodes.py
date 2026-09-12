@@ -73,14 +73,20 @@ def search_node(state: dict) -> dict:
     queries = state["planned_queries"]
     accumulated = list(state.get("search_results", []))
 
+    seen_urls: set[str] = {r.get("url", "") for r in accumulated}
     for q in queries:
         trace.add("search", f"'{q}'")
         results = _tavily.invoke(q)
         if isinstance(results, list):
+            new_results = []
             for r in results:
-                r["_query"] = q
-            accumulated.extend(results)
-            trace.add("search", f"→ {len(results)} result(s)")
+                url = r.get("url", "")
+                if url and url not in seen_urls:
+                    seen_urls.add(url)
+                    r["_query"] = q
+                    new_results.append(r)
+            accumulated.extend(new_results)
+            trace.add("search", f"→ {len(new_results)} new result(s)")
 
     return {"search_results": accumulated}
 
