@@ -19,6 +19,10 @@ from src.graph.state import (
 logger = logging.getLogger(__name__)
 
 _llm = ChatOpenAI(model="gpt-4o-mini", temperature=0)
+
+_MAX_SNIPPET_CHARS = 400
+_MAX_SOURCES_IN_PROMPT = 10
+_CONFIDENCE_THRESHOLD = 0.4
 _tavily: TavilyClient | None = None
 
 
@@ -76,7 +80,7 @@ def research_branch(state: BranchState) -> dict[str, Any]:
         Source(
             url=r.get("url", ""),
             title=r.get("title", ""),
-            snippet=r.get("content", "")[:400],
+            snippet=r.get("content", "")[:_MAX_SNIPPET_CHARS],
         )
         for r in raw_results
     ]
@@ -166,7 +170,7 @@ Claims:
 
 def synthesize(state: PipelineState) -> dict[str, Any]:
     verified_findings = [
-        f for f in state["findings"] if f.confidence >= 0.4
+        f for f in state["findings"] if f.confidence >= _CONFIDENCE_THRESHOLD
     ]
 
     if not verified_findings:
@@ -213,7 +217,7 @@ Return JSON with this shape:
 Synthesis:
 {synthesis}
 
-Available source URLs: {json.dumps([s.url for s in all_sources[:10]])}"""
+Available source URLs: {json.dumps([s.url for s in all_sources[:_MAX_SOURCES_IN_PROMPT]])}"""
 
     response = _llm.invoke(
         [
